@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.function.Function;
 import land.soia.JsonFlavor;
 import land.soia.Serializer;
+import land.soia.reflection.StructDescriptor;
+import land.soia.reflection.TypeDescriptor;
 import soiagen.user.Constants;
 import soiagen.user.SubscriptionStatus;
 import soiagen.user.User;
@@ -113,20 +115,14 @@ public class Snippets {
 
     // First way to branch on enum variants: switch on kind()
     final Function<SubscriptionStatus, String> getInfoText =
-        status -> {
-          switch (status.kind()) {
-            case FREE_CONST:
-              return "Free user";
-            case PREMIUM_CONST:
-              return "Premium user";
-            case TRIAL_WRAPPER:
-              return "On trial since " + status.asTrial().startTime();
-            case UNKNOWN:
-              return "Unknown subscription status";
-            default:
-              throw new AssertionError("Unreachable");
-          }
-        };
+        status ->
+            switch (status.kind()) {
+              case FREE_CONST -> "Free user";
+              case PREMIUM_CONST -> "Premium user";
+              case TRIAL_WRAPPER -> "On trial since " + status.asTrial().startTime();
+              case UNKNOWN -> "Unknown subscription status";
+              default -> throw new AssertionError("Unreachable");
+            };
 
     System.out.println(getInfoText.apply(john.subscriptionStatus()));
     // "Free user"
@@ -304,6 +300,24 @@ public class Snippets {
     // =========================================================================
     // REFLECTION
     // =========================================================================
+
+    // Reflection allows you to inspect a soia type at runtime.
+
+    System.out.println(
+        User.TYPE_DESCRIPTOR //
+            .getFields()
+            .stream()
+            .map((field) -> field.getName())
+            .toList());
+    // [user_id, name, quote, pets, subscription_status]
+
+    // A type descriptor can be serialized to JSON and deserialized later.
+    final TypeDescriptor typeDescriptor =
+        TypeDescriptor.Companion.parseFromJsonCode( //
+            User.SERIALIZER.typeDescriptor().asJsonCode());
+
+    assert typeDescriptor instanceof StructDescriptor;
+    assert ((StructDescriptor) typeDescriptor).getFields().size() == 5;
 
     // The 'allStringsToUpperCase' function uses reflection to convert all the
     // strings contained in a given Soia value to upper case.
