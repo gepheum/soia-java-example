@@ -9,7 +9,7 @@
     "run:call-service": "./gradlew run -PmainClass=examples.CallService"
   },
   "devDependencies": {
-    "soia-java-gen": "^0.0.1",
+    "soia-java-gen": "^0.0.2",
     "soiac": "^1.0.51"
   }
 }
